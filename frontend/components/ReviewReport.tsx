@@ -1,9 +1,9 @@
 "use client";
+import React from "react";
 import { ReviewResponse, FileReview, Issue } from "@/lib/api";
 import { useState } from "react";
 import { ChevronDown, ChevronUp, AlertTriangle, Shield, Zap, Code2 } from "lucide-react";
 
-// ── severity helpers ──────────────────────────────────────────
 const SEVERITY_COLORS: Record<string, string> = {
   critical: "#ef4444",
   high:     "#f97316",
@@ -11,7 +11,7 @@ const SEVERITY_COLORS: Record<string, string> = {
   low:      "#6366f1",
 };
 
-const TYPE_ICONS: Record<string, JSX.Element> = {
+const TYPE_ICONS: Record<string, React.ReactElement> = {
   bug:         <AlertTriangle size={13} />,
   security:    <Shield size={13} />,
   performance: <Zap size={13} />,
@@ -93,7 +93,6 @@ function FileCard({ file }: { file: FileReview }) {
           {file.file_path}
         </span>
 
-        {/* issue count pills */}
         <div className="flex items-center gap-1.5">
           {criticalCount > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full font-medium"
@@ -153,15 +152,17 @@ export default function ReviewReport({ review }: { review: ReviewResponse }) {
             { label: "Critical", value: criticalIssues, color: "#ef4444" },
           ].map(stat => (
             <div key={stat.label}>
-              <div className="text-2xl font-bold" style={{ color: stat.color || "var(--text-primary)" }}>
+              <div className="text-2xl font-bold"
+                style={{ color: stat.color || "var(--text-primary)" }}>
                 {stat.value}
               </div>
-              <div className="text-xs" style={{ color: "var(--text-secondary)" }}>{stat.label}</div>
+              <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                {stat.label}
+              </div>
             </div>
           ))}
         </div>
 
-        {/* top concerns */}
         {review.top_concerns.length > 0 && (
           <div className="flex-1 min-w-48">
             <p className="text-xs font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
@@ -181,7 +182,7 @@ export default function ReviewReport({ review }: { review: ReviewResponse }) {
         FILE BY FILE REVIEW
       </p>
       {review.file_reviews
-        .sort((a, b) => a.score - b.score) // worst files first
+        .sort((a, b) => a.score - b.score)
         .map((file, i) => <FileCard key={i} file={file} />)
       }
     </div>
