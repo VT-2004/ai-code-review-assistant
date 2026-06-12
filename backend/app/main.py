@@ -7,7 +7,10 @@ app = FastAPI(title="AI Code Review Assistant")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://ai-code-review-assistant-h8w8.vercel.app"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
