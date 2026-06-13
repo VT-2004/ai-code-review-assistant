@@ -15,7 +15,11 @@ Point it at any public GitHub repository and get:
 - **Chat with the codebase** — ask questions in plain English, get answers with source citations
 - **Top concerns** — critical and high severity issues surfaced immediately
 
-![Review Report](https://via.placeholder.com/800x400?text=AI+Code+Review+Report)
+### Review Report
+![Review Report](assets/review.png)
+
+### Error Handling
+![Error Handling](assets/error.png)
 
 ---
 
