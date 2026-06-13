@@ -1,9 +1,5 @@
 import chromadb
-import requests
 from chromadb.config import Settings
-from app.core.config import HF_TOKEN
-
-API_URL = "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2"
 
 _client = None
 _collection = None
@@ -59,19 +55,9 @@ def store_chunks(embedded_chunks: list[dict]):
     print(f"Stored {len(ids)} chunks in ChromaDB")
     return len(ids)
 
-def embed_question(question: str) -> list[float]:
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-    response = requests.post(
-        API_URL,
-        headers=headers,
-        json={"inputs": [question], "options": {"wait_for_model": True}}
-    )
-    response.raise_for_status()
-    return response.json()[0]
-
-def query_similar(question: str, embedder=None, n_results: int = 5) -> list[dict]:
+def query_similar(question: str, embedder, n_results: int = 5) -> list[dict]:
     collection = get_collection()
-    question_vector = embed_question(question)
+    question_vector = embedder.encode([question])[0].tolist()
 
     results = collection.query(
         query_embeddings=[question_vector],
