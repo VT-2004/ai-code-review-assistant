@@ -1,7 +1,10 @@
 import chromadb
+import requests
 from chromadb.config import Settings
+from app.core.config import HF_TOKEN
 
-# in-memory client — resets each session (we'll make it persistent on Day 7)
+API_URL = "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2"
+
 _client = None
 _collection = None
 COLLECTION_NAME = "code_chunks"
@@ -23,13 +26,13 @@ def get_collection(reset: bool = False):
     if _collection is None:
         _collection = client.get_or_create_collection(
             name=COLLECTION_NAME,
-            metadata={"hnsw:space": "cosine"}  # cosine similarity for code search
+            metadata={"hnsw:space": "cosine"}
         )
 
     return _collection
 
 def store_chunks(embedded_chunks: list[dict]):
-    collection = get_collection(reset=True)  # fresh collection per repo
+    collection = get_collection(reset=True)
 
     ids = []
     embeddings = []
@@ -56,11 +59,19 @@ def store_chunks(embedded_chunks: list[dict]):
     print(f"Stored {len(ids)} chunks in ChromaDB")
     return len(ids)
 
-def query_similar(question: str, embedder, n_results: int = 5) -> list[dict]:
-    collection = get_collection()
+def embed_question(question: str) -> list[float]:
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    response = requests.post(
+        API_URL,
+        headers=headers,
+        json={"inputs": [question], "options": {"wait_for_model": True}}
+    )
+    response.raise_for_status()
+    return response.json()[0]
 
-    # embed the question using the same model
-    question_vector = embedder.encode([question])[0].tolist()
+def query_similar(question: str, embedder=None, n_results: int = 5) -> list[dict]:
+    collection = get_collection()
+    question_vector = embed_question(question)
 
     results = collection.query(
         query_embeddings=[question_vector],
@@ -68,7 +79,6 @@ def query_similar(question: str, embedder, n_results: int = 5) -> list[dict]:
         include=["documents", "metadatas", "distances"]
     )
 
-    # format into clean list
     hits = []
     for i in range(len(results["ids"][0])):
         hits.append({
@@ -76,7 +86,7 @@ def query_similar(question: str, embedder, n_results: int = 5) -> list[dict]:
             "text": results["documents"][0][i],
             "file_path": results["metadatas"][0][i]["file_path"],
             "language": results["metadatas"][0][i]["language"],
-            "score": round(1 - results["distances"][0][i], 4)  # convert distance to similarity
+            "score": round(1 - results["distances"][0][i], 4)
         })
 
     return hits
